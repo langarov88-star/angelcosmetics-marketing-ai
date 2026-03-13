@@ -1,0 +1,29 @@
+{
+  "name": "angelcosmetics-agent-content",
+  "main": "src/workers/content/index.ts",
+  "compatibility_date": "2026-03-13",
+  "compatibility_flags": ["nodejs_compat"],
+  "queues": {
+    "producers": [
+      { "queue": "queue-results",   "binding": "QUEUE_RESULTS" },
+      { "queue": "queue-approvals", "binding": "QUEUE_APPROVALS" }
+    ],
+    "consumers": [
+      { "queue": "queue-agent-content", "max_batch_size": 3, "max_batch_timeout": 30 }
+    ]
+  },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "angelcosmetics-marketing-db", "database_id": "REPLACE_WITH_D1_ID" }
+  ],
+  "kv_namespaces": [
+    { "binding": "KV_CONFIG", "id": "REPLACE_WITH_KV_CONFIG_ID" },
+    { "binding": "KV_CACHE",  "id": "REPLACE_WITH_KV_CACHE_ID" }
+  ],
+  "r2_buckets": [
+    { "binding": "R2_EXPORTS", "bucket_name": "angelcosmetics-exports" }
+  ],
+  "env": {
+    "staging": { "name": "angelcosmetics-agent-content-staging" },
+    "production": { "name": "angelcosmetics-agent-content" }
+  }
+}
