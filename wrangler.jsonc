@@ -1,5 +1,101 @@
+// Main entry: Orchestrator worker
+// Each agent has its own wrangler.<agent>.jsonc
 {
-  "name": "angelcosmetics-marketing",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-03-13"
+  "name": "angelcosmetics-orchestrator",
+  "main": "src/workers/orchestrator/index.ts",
+  "compatibility_date": "2026-03-13",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Cron triggers
+  "triggers": {
+    "crons": [
+      "0 8 * * 1",   // Monday 08:00 UTC - weekly email campaign
+      "0 6 1 * *"    // 1st of month 06:00 UTC - monthly analytics report
+    ]
+  },
+
+  // Durable Objects
+  "durable_objects": {
+    "bindings": [
+      { "name": "WORKFLOW_STATE", "class_name": "WorkflowState" },
+      { "name": "APPROVAL_GATE", "class_name": "ApprovalGate" }
+    ]
+  },
+
+  // Queues - orchestrator produces to all agent queues, consumes results
+  "queues": {
+    "producers": [
+      { "queue": "queue-agent-email",      "binding": "QUEUE_EMAIL" },
+      { "queue": "queue-agent-google-ads", "binding": "QUEUE_GOOGLE_ADS" },
+      { "queue": "queue-agent-meta",       "binding": "QUEUE_META" },
+      { "queue": "queue-agent-content",    "binding": "QUEUE_CONTENT" },
+      { "queue": "queue-agent-creative",   "binding": "QUEUE_CREATIVE" },
+      { "queue": "queue-agent-analytics",  "binding": "QUEUE_ANALYTICS" },
+      { "queue": "queue-approvals",        "binding": "QUEUE_APPROVALS" },
+      { "queue": "queue-notifications",    "binding": "QUEUE_NOTIFICATIONS" }
+    ],
+    "consumers": [
+      { "queue": "queue-results", "max_batch_size": 10, "max_batch_timeout": 5 }
+    ]
+  },
+
+  // D1 database
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "angelcosmetics-marketing-db",
+      "database_id": "REPLACE_WITH_D1_ID",
+      "migrations_dir": "db/migrations"
+    }
+  ],
+
+  // KV namespaces
+  "kv_namespaces": [
+    { "binding": "KV_CONFIG",   "id": "REPLACE_WITH_KV_CONFIG_ID" },
+    { "binding": "KV_CACHE",    "id": "REPLACE_WITH_KV_CACHE_ID" },
+    { "binding": "KV_SESSIONS", "id": "REPLACE_WITH_KV_SESSIONS_ID" }
+  ],
+
+  // R2 buckets
+  "r2_buckets": [
+    { "binding": "R2_ASSETS",  "bucket_name": "angelcosmetics-assets" },
+    { "binding": "R2_EXPORTS", "bucket_name": "angelcosmetics-exports" },
+    { "binding": "R2_BACKUPS", "bucket_name": "angelcosmetics-backups" }
+  ],
+
+  // Staging environment
+  "env": {
+    "staging": {
+      "name": "angelcosmetics-orchestrator-staging",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "angelcosmetics-marketing-db-staging",
+          "database_id": "REPLACE_WITH_STAGING_D1_ID",
+          "migrations_dir": "db/migrations"
+        }
+      ],
+      "kv_namespaces": [
+        { "binding": "KV_CONFIG",   "id": "REPLACE_WITH_STAGING_KV_CONFIG_ID" },
+        { "binding": "KV_CACHE",    "id": "REPLACE_WITH_STAGING_KV_CACHE_ID" },
+        { "binding": "KV_SESSIONS", "id": "REPLACE_WITH_STAGING_KV_SESSIONS_ID" }
+      ],
+      "r2_buckets": [
+        { "binding": "R2_ASSETS",  "bucket_name": "angelcosmetics-assets-staging" },
+        { "binding": "R2_EXPORTS", "bucket_name": "angelcosmetics-exports-staging" },
+        { "binding": "R2_BACKUPS", "bucket_name": "angelcosmetics-backups-staging" }
+      ]
+    },
+    "production": {
+      "name": "angelcosmetics-orchestrator",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "angelcosmetics-marketing-db",
+          "database_id": "REPLACE_WITH_PROD_D1_ID",
+          "migrations_dir": "db/migrations"
+        }
+      ]
+    }
+  }
 }
